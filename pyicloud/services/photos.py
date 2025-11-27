@@ -4,7 +4,7 @@ import base64
 import logging
 import os
 from abc import abstractmethod
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from enum import Enum, IntEnum, unique
 from typing import Any, Generator, Iterable, Iterator, Optional, cast
 from urllib.parse import urlencode
@@ -1515,20 +1515,28 @@ class PhotoAsset:
         return self._master_record["fields"]["resOriginalRes"]["value"]["size"]
 
     @property
-    def created(self) -> datetime:
+    def created(self) -> datetime | None:
         """Gets the photo created date."""
         return self.asset_date
 
     @property
-    def asset_date(self) -> datetime:
+    def asset_date(self) -> datetime | None:
         """Gets the photo asset date."""
-        try:
-            return datetime.fromtimestamp(
-                self._asset_record["fields"]["assetDate"]["value"] / 1000.0,
-                timezone.utc,
-            )
-        except KeyError:
-            return datetime.fromtimestamp(0, timezone.utc)
+        if "assetDate" not in self._asset_record["fields"]:
+            return None
+
+        timezone_offset = 0
+        if "timeZoneOffset" in self._asset_record["fields"]:
+            timezone_offset = self._asset_record["fields"][
+                "timeZoneOffset"
+            ]["value"]
+
+        return datetime.fromtimestamp(
+            self._asset_record["fields"]["assetDate"]["value"] / 1000.0,
+            tz=timezone(
+                timedelta(seconds=timezone_offset)
+            ),
+        )
 
     @property
     def added_date(self) -> datetime:

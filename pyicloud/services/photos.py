@@ -6,7 +6,7 @@ import os
 from abc import abstractmethod
 from datetime import datetime, timedelta, timezone
 from enum import Enum, IntEnum, unique
-from typing import Any, Generator, Iterable, Iterator, Optional, cast
+from typing import Any, Generator, Iterable, Iterator, Optional, Tuple, cast
 from urllib.parse import urlencode
 
 from requests import Response
@@ -1497,6 +1497,9 @@ class PhotoAsset:
         "thumb": "resVidSmall",
     }
 
+    def __repr__(self) -> str:
+        return f"<{type(self).__name__}: id={self.id}>"
+
     @property
     def id(self) -> str:
         """Gets the photo id."""
@@ -1542,16 +1545,22 @@ class PhotoAsset:
     def added_date(self) -> datetime:
         """Gets the photo added date."""
         return datetime.fromtimestamp(
-            self._asset_record["fields"]["addedDate"]["value"] / 1000.0, timezone.utc
+            self._asset_record["fields"]["addedDate"]["value"] / 1000.0,
+            timezone.utc,
         )
 
     @property
-    def dimensions(self):
+    def dimensions(self) -> Tuple[int, int]:
         """Gets the photo dimensions."""
-        return (
-            self._master_record["fields"]["resOriginalWidth"]["value"],
-            self._master_record["fields"]["resOriginalHeight"]["value"],
-        )
+        return (self.width, self.height)
+
+    @property
+    def height(self) -> int:
+        return self._master_record["fields"]["resOriginalHeight"]["value"]
+
+    @property
+    def width(self) -> int:
+        return self._master_record["fields"]["resOriginalWidth"]["value"]
 
     @property
     def item_type(self) -> str:
@@ -1683,9 +1692,6 @@ class PhotoAsset:
             headers={CONTENT_TYPE: CONTENT_TYPE_TEXT},
         )
         return resp.status_code == 200
-
-    def __repr__(self) -> str:
-        return f"<{type(self).__name__}: id={self.id}>"
 
 
 class PhotoStreamAsset(PhotoAsset):

@@ -1565,6 +1565,15 @@ class PhotoAsset:
         return self._master_record["fields"]["resOriginalWidth"]["value"]
 
     @property
+    def title(self) -> str | None:
+        """Gets the photo title."""
+        if "captionEnc" not in self._asset_record["fields"]:
+            return None
+        return base64.b64decode(
+            self._asset_record["fields"]["captionEnc"]["value"]
+        ).decode("utf-8")
+
+    @property
     def item_type(self) -> str:
         """Gets the photo item type."""
         item_type: str = ""

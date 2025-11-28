@@ -1554,8 +1554,10 @@ class PhotoAsset:
 
     PHOTO_VERSION_LOOKUP: dict[str, str] = {
         "original": "resOriginal",
+        "alternative": "resOriginalAlt",
         "medium": "resJPEGMed",
         "thumb": "resJPEGThumb",
+        "adjusted": "resJPEGFull",
         "original_video": "resOriginalVidCompl",
         "medium_video": "resVidMed",
         "thumb_video": "resVidSmall",
@@ -1851,58 +1853,56 @@ class PhotoAsset:
         """Gets the photo versions."""
         if not self._versions:
             self._versions = {}
-            if self.item_type == "movie":
-                typed_version_lookup: dict[str, str] = self.VIDEO_VERSION_LOOKUP
-            else:
-                typed_version_lookup = self.PHOTO_VERSION_LOOKUP
-
+            typed_version_lookup: dict[str, str] = (
+                self.VIDEO_VERSION_LOOKUP
+                if self.item_type == "movie"
+                else self.PHOTO_VERSION_LOOKUP
+            )
             for key, prefix in typed_version_lookup.items():
-                if f"{prefix}Res" in self._master_record["fields"]:
-                    self._versions[key] = self._get_photo_version(prefix)
+                if f"{prefix}Res" in self._asset_record["fields"]:
+                    fields = self._asset_record["fields"]
+                elif f"{prefix}Res" in self._master_record["fields"]:
+                    fields = self._master_record["fields"]
+                else:
+                    fields = None
+                if fields is not None:
+                    self._versions[key] = self._get_photo_version(
+                        fields, prefix
+                    )
 
         return self._versions
 
-    def _get_photo_version(self, prefix: str) -> dict[str, Any]:
-        version: dict[str, Any] = {}
-        fields: dict[str, dict[str, Any]] = self._master_record["fields"]
-        width_entry: Optional[dict[str, Any]] = fields.get(f"{prefix}Width")
-        if width_entry:
-            version["width"] = width_entry["value"]
-        else:
-            version["width"] = None
+    def _get_photo_version(
+        self,
+        fields: dict[str, Any],
+        prefix: str,
+    ) -> dict[str, Any]:
+        version: dict[str, Any] = {
+            # "checksum": fields.get(f"{prefix}Res", {}).get("value", {}).get("fileChecksum"),
+            "filename": self.filename,
+            "height": fields.get(f"{prefix}Height", {}).get("value"),
+            "size": fields.get(f"{prefix}Res", {}).get("value", {}).get("size"),
+            "type": fields.get(f"{prefix}FileType", {}).get("value"),
+            "url": fields.get(f"{prefix}Res", {}).get("value", {}).get("downloadURL"),
+            "width": fields.get(f"{prefix}Width", {}).get("value"),
+        }
 
-        height_entry: Optional[dict[str, Any]] = fields.get(f"{prefix}Height")
-        if height_entry:
-            version["height"] = height_entry["value"]
-        else:
-            version["height"] = None
-
-        size_entry: Optional[dict[str, Any]] = fields.get(f"{prefix}Res")
-        if size_entry:
-            version["size"] = size_entry["value"]["size"]
-            version["url"] = size_entry["value"]["downloadURL"]
-        else:
-            version["size"] = None
-            version["url"] = None
-
-        type_entry: Optional[dict[str, Any]] = fields.get(f"{prefix}FileType")
-        if type_entry:
-            version["type"] = type_entry["value"]
-        else:
-            version["type"] = None
-
-        # Default to the master filename.
-        version["filename"] = self.filename
         # For live photos, the video version has a different filename.
         if self.is_live_photo:
-            version_type: Optional[str] = version.get("type")
-            # Check if the current version is the video component of the live photo.
-            if version_type and self.ITEM_TYPES.get(version_type, None) == "movie":
+            version_type = version.get("type")
+            if (
+                version_type is not None
+                and self.ITEM_TYPES.get(version_type) == "movie"
+            ):
                 # Create the video filename from the image filename.
                 # e.g. IMG_1234.HEIC -> IMG_1234.MOV
                 filename_base, _ = os.path.splitext(self.filename)
-                extension: str = self.FILE_TYPE_EXTENSIONS.get(version_type, ".MOV")
-                live_photo_video_filename: str = f"{filename_base}{extension}"
+                extension: str = self.FILE_TYPE_EXTENSIONS.get(
+                    version_type, ".MOV"
+                )
+                live_photo_video_filename: str = (
+                    f"{filename_base:s}{extension:s}"
+                )
                 version["filename"] = live_photo_video_filename
 
         return version

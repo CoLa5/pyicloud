@@ -3,10 +3,11 @@
 import base64
 import logging
 import os
+import plistlib
 from abc import abstractmethod
 from datetime import datetime, timedelta, timezone
 from enum import Enum, IntEnum, unique
-from typing import Any, Generator, Iterable, Iterator, Optional, Tuple, cast
+from typing import Any, Generator, Iterable, Iterator, Optional, Tuple, TypedDict, cast
 from urllib.parse import urlencode
 
 from requests import Response
@@ -1453,6 +1454,21 @@ class SharedPhotoStreamAlbum(BasePhotoAlbum):
         return None
 
 
+class Location(TypedDict, total=False):
+    """Location."""
+
+    alt: float
+    course: float
+    courseAcc: float
+    horzAcc: float
+    lat: float
+    lon: float
+    speed: float
+    speedAcc: float
+    timestamp: datetime
+    vertAcc: float
+
+
 class PhotoAsset:
     """A photo."""
 
@@ -1580,6 +1596,20 @@ class PhotoAsset:
     def is_burst_photo(self) -> bool:
         """Checks if the photo is a burst photo."""
         return self.burst_id is not None
+
+    @property
+    def location(self) -> Location | None:
+        """Gets the photo location."""
+        if "locationEnc" not in self._asset_record["fields"]:
+            return None
+        loc = plistlib.loads(
+            base64.b64decode(
+                self._asset_record["fields"]["locationEnc"]["value"]
+            )
+        )
+        if not loc:
+            return None
+        return Location(**loc)
 
     @property
     def width(self) -> int:

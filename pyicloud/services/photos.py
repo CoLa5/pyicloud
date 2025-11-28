@@ -1619,6 +1619,15 @@ class PhotoAsset:
         return self.burst_id is not None
 
     @property
+    def is_favorite(self) -> bool:
+        """Gets whether the photo is in favorites."""
+        return (
+            "isFavorite" in self._asset_record["fields"]
+            and self._asset_record["fields"]["isFavorite"]["value"] == 1
+        )
+
+
+    @property
     def location(self) -> Location | None:
         """Gets the photo location."""
         if "locationEnc" not in self._asset_record["fields"]:

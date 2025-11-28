@@ -1628,11 +1628,13 @@ class PhotoAsset:
 
 
     @property
-    def added_date(self) -> datetime:
+    def added_date(self) -> datetime | None:
         """Gets the photo added date."""
+        if "addedDate" not in self._asset_record["fields"]:
+            return None
         return datetime.fromtimestamp(
             self._asset_record["fields"]["addedDate"]["value"] / 1000.0,
-            timezone.utc,
+            tz=self.timezone,
         )
 
     @property
@@ -1640,16 +1642,9 @@ class PhotoAsset:
         """Gets the photo asset date."""
         if "assetDate" not in self._asset_record["fields"]:
             return None
-
-        timezone_offset = 0
-        if "timeZoneOffset" in self._asset_record["fields"]:
-            timezone_offset = self._asset_record["fields"][
-                "timeZoneOffset"
-            ]["value"]
-
         return datetime.fromtimestamp(
             self._asset_record["fields"]["assetDate"]["value"] / 1000.0,
-            tz=timezone(timedelta(seconds=timezone_offset)),
+            tz=self.timezone,
         )
 
     @property
@@ -1873,6 +1868,16 @@ class PhotoAsset:
         if "orientation" not in self._asset_record["fields"]:
             return None
         return Orientation(self._asset_record["fields"]["orientation"]["value"])
+
+    @property
+    def timezone(self) -> timezone:
+        """Gets the photo timezone."""
+        if "timeZoneOffset" in self._asset_record["fields"]:
+            timezone_offset = self._asset_record["fields"]["timeZoneOffset"][
+                "value"
+            ]
+            return timezone(timedelta(seconds=timezone_offset))
+        return timezone.utc
 
     @property
     def title(self) -> str | None:

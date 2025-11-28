@@ -1662,6 +1662,23 @@ class PhotoAsset:
         return Location(**loc)
 
     @property
+    def live_photo_time(self) -> float | None:
+        """Gets the live photo timestamp in the video.
+
+        If it is not a live photo, returns None.
+        """
+        if (
+            "vidComplDispScale" not in self._asset_record["fields"]
+            or "vidComplDispValue" not in self._asset_record["fields"]
+            or self._asset_record["fields"]["vidComplDispScale"]["value"] == 0
+        ):
+            return None
+        return (
+            self._asset_record["fields"]["vidComplDispValue"]["value"]
+            / self._asset_record["fields"]["vidComplDispScale"]["value"]
+        )
+
+    @property
     def width(self) -> int:
         """Gets the photo width in pixels."""
         return self._master_record["fields"]["resOriginalWidth"]["value"]

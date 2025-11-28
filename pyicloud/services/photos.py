@@ -1469,6 +1469,25 @@ class Location(TypedDict, total=False):
     vertAcc: float
 
 
+@unique
+class Orientation(IntEnum):
+    NOT_SET = 0
+    HORIZONTAL = 1
+    MIRROR_HORIZONTAL = 2
+    ROTATE_180 = 3
+    MIRROR_VERTICAL = 4
+    MIRROR_HORIZONTAL_AND_ROTATE_270_CW = 5
+    ROTATE_90_CW = 6
+    MIRROR_HORIZONTAL_AND_ROTATE_90_CW = 7
+    ROTATE_270 = 8
+
+    def __repr__(self) -> str:
+        return f"<{type(self).__name__:s}.{self.name:s}: {self.value:d}>"
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class PhotoAsset:
     """A photo."""
 
@@ -1688,6 +1707,13 @@ class PhotoAsset:
                 self._master_record["fields"]["mediaMetaDataEnc"]["value"]
             ),
         )
+
+    @property
+    def orientation(self) -> Orientation | None:
+        """Gets the photo orientation."""
+        if "orientation" not in self._asset_record["fields"]:
+            return None
+        return Orientation(self._asset_record["fields"]["orientation"]["value"])
 
     @property
     def width(self) -> int:

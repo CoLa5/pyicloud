@@ -1728,6 +1728,10 @@ class PhotoAsset:
             and self._asset_record["fields"]["isFavorite"]["value"] == 1
         )
 
+    @is_favorite.setter
+    def is_favorite(self, is_favorite: bool) -> None:
+        self._update_field("isFavorite", int(bool(is_favorite)))
+
     @property
     def is_hidden(self) -> bool:
         """Checks if the photo is hidden."""
@@ -1907,6 +1911,16 @@ class PhotoAsset:
     def width(self) -> int:
         """Gets the photo width in pixels."""
         return self._master_record["fields"]["resOriginalWidth"]["value"]
+
+    def add_to_favorites(self) -> None:
+        """Adds the photo to favorites."""
+        if not self.is_favorite:
+            self.is_favorite = True
+
+    def remove_from_favorites(self) -> None:
+        """Removes the photo from favorites."""
+        if self.is_favorite:
+            self.is_favorite = False
 
     def download(self, version="original", **kwargs) -> Optional[bytes]:
         """Returns the photo file."""

@@ -1890,7 +1890,7 @@ class PhotoAsset:
         )
 
     @property
-    def versions(self) -> dict[str, dict[str, Any]]:
+    def versions(self) -> dict[VersionSize, dict[str, Any]]:
         """Gets the photo versions."""
         if not self._versions:
             self._versions = {}

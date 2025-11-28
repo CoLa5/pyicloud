@@ -1737,6 +1737,34 @@ class PhotoAsset:
         )
 
     @property
+    def is_live_photo(self) -> bool:
+        """Check if the photo is a live photo."""
+        return (
+            self.item_type == "image"
+            and "resOriginalVidComplFileType" in self._master_record["fields"]
+        )
+
+    @property
+    def item_type(self) -> str:
+        """Gets the photo item type."""
+        item_type: str = ""
+        try:
+            item_type = self._master_record["fields"]["itemType"]["value"]
+        except KeyError:
+            try:
+                item_type = self._master_record["fields"]["resOriginalFileType"][
+                    "value"
+                ]
+            except KeyError:
+                # Both fields missing; fall back to filename extension or default to "movie".
+                pass
+        if item_type in self.ITEM_TYPES:
+            return self.ITEM_TYPES[item_type]
+        if self.filename.lower().endswith((".heic", ".png", ".jpg", ".jpeg")):
+            return "image"
+        return "movie"
+
+    @property
     def keywords(self) -> set[str]:
         """Gets the photo keywords."""
         if "keywordsEnc" not in self._asset_record["fields"]:
@@ -1799,11 +1827,6 @@ class PhotoAsset:
         return Orientation(self._asset_record["fields"]["orientation"]["value"])
 
     @property
-    def width(self) -> int:
-        """Gets the photo width in pixels."""
-        return self._master_record["fields"]["resOriginalWidth"]["value"]
-
-    @property
     def title(self) -> str | None:
         """Gets / sets the photo title."""
         if "captionEnc" not in self._asset_record["fields"]:
@@ -1817,34 +1840,6 @@ class PhotoAsset:
         self._update_field(
             "captionEnc",
             base64.b64encode(title.encode("utf-8")).decode("utf-8"),
-        )
-
-    @property
-    def item_type(self) -> str:
-        """Gets the photo item type."""
-        item_type: str = ""
-        try:
-            item_type = self._master_record["fields"]["itemType"]["value"]
-        except KeyError:
-            try:
-                item_type = self._master_record["fields"]["resOriginalFileType"][
-                    "value"
-                ]
-            except KeyError:
-                # Both fields missing; fall back to filename extension or default to "movie".
-                pass
-        if item_type in self.ITEM_TYPES:
-            return self.ITEM_TYPES[item_type]
-        if self.filename.lower().endswith((".heic", ".png", ".jpg", ".jpeg")):
-            return "image"
-        return "movie"
-
-    @property
-    def is_live_photo(self) -> bool:
-        """Check if the photo is a live photo."""
-        return (
-            self.item_type == "image"
-            and "resOriginalVidComplFileType" in self._master_record["fields"]
         )
 
     @property
@@ -1907,6 +1902,11 @@ class PhotoAsset:
                 version["filename"] = live_photo_video_filename
 
         return version
+
+    @property
+    def width(self) -> int:
+        """Gets the photo width in pixels."""
+        return self._master_record["fields"]["resOriginalWidth"]["value"]
 
     def download(self, version="original", **kwargs) -> Optional[bytes]:
         """Returns the photo file."""

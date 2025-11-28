@@ -196,19 +196,20 @@ class BasePhotoLibrary:
             self._albums = self._get_albums()
         return self._albums
 
-    def parse_asset_response(
-        self, response: dict[str, list[dict[str, Any]]]
-    ) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
-        """Parses the asset response."""
-        asset_records: dict[str, dict[str, Any]] = {}
-        master_records: list[dict[str, Any]] = []
-        for rec in response["records"]:
-            if rec["recordType"] == "CPLAsset":
-                master_id: str = rec["fields"]["masterRef"]["value"]["recordName"]
-                asset_records[master_id] = rec
-            elif rec["recordType"] == "CPLMaster":
-                master_records.append(rec)
-        return (asset_records, master_records)
+
+def parse_asset_response(
+    response: dict[str, list[dict[str, Any]]]
+) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+    """Parses the asset response."""
+    asset_records: dict[str, dict[str, Any]] = {}
+    master_records: list[dict[str, Any]] = []
+    for rec in response["records"]:
+        if rec["recordType"] == "CPLAsset":
+            master_id: str = rec["fields"]["masterRef"]["value"]["recordName"]
+            asset_records[master_id] = rec
+        elif rec["recordType"] == "CPLMaster":
+            master_records.append(rec)
+    return (asset_records, master_records)
 
 
 class PhotoLibrary(BasePhotoLibrary):
@@ -762,9 +763,7 @@ class BasePhotoAlbum:
         json_response: dict[str, list[dict[str, Any]]] = response.json()
         asset_records: dict[str, Any]
         master_records: list[dict[str, Any]]
-        asset_records, master_records = self._library.parse_asset_response(
-            json_response
-        )
+        asset_records, master_records = parse_asset_response(json_response)
         for master_record in master_records:
             record_name: str = master_record["recordName"]
             asset_record = asset_records.get(record_name)
@@ -1914,8 +1913,15 @@ class PhotoAsset:
         )
         return response.raw.read()
 
-    def delete(self) -> bool:
+    def delete(self) -> None:
         """Deletes the photo."""
+        self._update_field("isDeleted", 1)
+
+    def _update_field(
+        self,
+        field: str,
+        value: int | str,
+    ) -> None:
         endpoint: str = self._service.service_endpoint
         params: str = urlencode(self._service.params)
         url: str = f"{endpoint}/records/modify?{params}"
@@ -1933,7 +1939,7 @@ class PhotoAsset:
                                 "recordChangeTag",
                                 self._master_record.get("recordChangeTag"),
                             ),
-                            "fields": {"isDeleted": {"value": 1}},
+                            "fields": {field: {"value": value}},
                         },
                     }
                 ],
@@ -1942,7 +1948,30 @@ class PhotoAsset:
             },
             headers={CONTENT_TYPE: CONTENT_TYPE_TEXT},
         )
-        return resp.status_code == 200
+
+        if not resp.ok:
+            api_error = PyiCloudAPIResponseException(
+                resp.reason, resp.status_code
+            )
+            _LOGGER.error(api_error)
+            raise api_error
+
+        json_response: dict[str, list[dict[str, Any]]] = resp.json()
+        asset_records: dict[str, Any]
+        master_records: list[dict[str, Any]]
+        asset_records, master_records = parse_asset_response(json_response)
+        if len(master_records) != 0:
+            _LOGGER.error("Received master record from update of PhotoAsset")
+
+        record_name: str = self._master_record["recordName"]
+        asset_record = asset_records.get(record_name)
+
+        if asset_record:
+            self._asset_record["fields"][field] = asset_record["fields"][field]
+        else:
+            _LOGGER.debug(
+                "No asset record found for master record: %s", record_name
+            )
 
 
 class PhotoStreamAsset(PhotoAsset):

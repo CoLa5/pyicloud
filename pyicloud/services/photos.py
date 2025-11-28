@@ -1517,10 +1517,14 @@ class PhotoAsset:
         """Gets the photo size."""
         return self._master_record["fields"]["resOriginalRes"]["value"]["size"]
 
+
     @property
-    def created(self) -> datetime | None:
-        """Gets the photo created date."""
-        return self.asset_date
+    def added_date(self) -> datetime:
+        """Gets the photo added date."""
+        return datetime.fromtimestamp(
+            self._asset_record["fields"]["addedDate"]["value"] / 1000.0,
+            timezone.utc,
+        )
 
     @property
     def asset_date(self) -> datetime | None:
@@ -1542,19 +1546,16 @@ class PhotoAsset:
         )
 
     @property
-    def added_date(self) -> datetime:
-        """Gets the photo added date."""
-        return datetime.fromtimestamp(
-            self._asset_record["fields"]["addedDate"]["value"] / 1000.0,
-            timezone.utc,
-        )
-
-    @property
     def burst_id(self) -> str | None:
         """Gets the photo burst ID (if it contains bursts else None)."""
         if "burstId" not in self._asset_record["fields"]:
             return None
         return self._asset_record["fields"]["burstId"]["value"]
+
+    @property
+    def created(self) -> datetime | None:
+        """Gets the photo created date."""
+        return self.asset_date
 
     @property
     def description(self) -> str | None:

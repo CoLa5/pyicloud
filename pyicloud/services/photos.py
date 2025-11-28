@@ -1487,9 +1487,6 @@ class AssetSubtypeV2(IntEnum):
     VIDEO_TIMELAPSE = 101
     VIDEO_SCREEN_RECORDING = 102
 
-    def __repr__(self):
-        return f"<{type(self).__name__:s}.{self.name:s}: {self.value:d}>"
-
     def __str__(self) -> str:
         return self.name
 
@@ -1539,9 +1536,6 @@ class Orientation(IntEnum):
     ROTATE_90_CW = 6
     MIRROR_HORIZONTAL_AND_ROTATE_90_CW = 7
     ROTATE_270 = 8
-
-    def __repr__(self) -> str:
-        return f"<{type(self).__name__:s}.{self.name:s}: {self.value:d}>"
 
     def __str__(self) -> str:
         return self.name

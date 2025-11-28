@@ -1588,6 +1588,27 @@ class PhotoAsset:
         return (self.width, self.height)
 
     @property
+    def duration(self) -> float | None:
+        """Gets the live photo / video duration in seconds else None."""
+        # Video
+        if (
+            "duration" in self._asset_record["fields"]
+            and self._asset_record["fields"]["duration"]["value"] != 0
+        ):
+            return self._asset_record["fields"]["duration"]["value"] / 1000.0
+        # Live photo
+        if (
+            "vidComplDurScale" in self._asset_record["fields"]
+            and "vidComplDurValue" in self._asset_record["fields"]
+            and self._asset_record["fields"]["vidComplDurScale"]["value"] != 0
+        ):
+            return (
+                self._asset_record["fields"]["vidComplDurValue"]["value"]
+                / self._asset_record["fields"]["vidComplDurScale"]["value"]
+            )
+        return None
+
+    @property
     def height(self) -> int:
         """Gets the photo height in pixels."""
         return self._master_record["fields"]["resOriginalHeight"]["value"]

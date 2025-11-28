@@ -1742,7 +1742,7 @@ class PhotoAsset:
 
     @property
     def is_live_photo(self) -> bool:
-        """Check if the photo is a live photo."""
+        """Checks if the photo is a live photo."""
         return (
             self.item_type == "image"
             and "resOriginalVidComplFileType" in self._master_record["fields"]

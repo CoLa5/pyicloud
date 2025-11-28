@@ -1,9 +1,11 @@
 """Photo service."""
 
 import base64
+import json
 import logging
 import os
 import plistlib
+import zlib
 from abc import abstractmethod
 from datetime import datetime, timedelta, timezone
 from enum import Enum, IntEnum, unique
@@ -1454,6 +1456,40 @@ class SharedPhotoStreamAlbum(BasePhotoAlbum):
         return None
 
 
+class AssetSubtypeV2(IntEnum):
+    """Asset Subtype V2."""
+
+    NOT_SET = -1
+    PHOTO_HDR = 0
+    PHOTO_PANORAMA = 1
+    PHOTO_LIVE = 2
+    PHOTO_SCREENSHOT = 3
+
+    # Note: OWN VALUE - not set by iCloud API
+    #       Interfered from:
+    #       asset_record["adjustmentSimpleDataEnc"]["value"]["adjustments"] \
+    #           [int]["identifier"] == "DepthEffect"
+    PHOTO_PORTRAIT = 1000
+
+    VIDEO_HDR = 0
+
+    # Note: OWN VALUE - not set by iCloud API
+    #       Interfered from:
+    #       asset_record["adjustmentSimpleDataEnc"]["value"]["adjustments"] \
+    #           [int]["identifier"] == "PortraitVideo"
+    VIDEO_CINEMATIC = 1001
+    # VIDEO_STREAMED = ?
+    VIDEO_HIGH_FRAME_RATE = 100
+    VIDEO_TIMELAPSE = 101
+    VIDEO_SCREEN_RECORDING = 102
+
+    def __repr__(self):
+        return f"<{type(self).__name__:s}.{self.name:s}: {self.value:d}>"
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Location(TypedDict, total=False):
     """Location."""
 
@@ -1579,6 +1615,54 @@ class PhotoAsset:
                 timedelta(seconds=timezone_offset)
             ),
         )
+
+    @property
+    def asset_subtype_v2(self) -> AssetSubtypeV2 | None:
+        if "assetSubtypeV2" not in self._asset_record["fields"]:
+            return None
+        subtype = self._asset_record["fields"]["assetSubtypeV2"]["value"]
+
+        if self.item_type == "image":
+            if subtype == 0:
+                decoded_value: list[dict[str, Any]] = (
+                    self._asset_record["fields"]
+                    .get("adjustmentSimpleDataEnc", {})
+                    .get("value")
+                )
+                if decoded_value is not None:
+                    data = json.loads(
+                        zlib.decompress(
+                            base64.b64decode(decoded_value),
+                            -zlib.MAX_WBITS,
+                        )
+                    )
+                    for adjustment in data["adjustments"]:
+                        if adjustment.get("identifier") == "DepthEffect":
+                            return AssetSubtypeV2.PHOTO_PORTRAIT
+                return AssetSubtypeV2.PHOTO_HDR
+            return AssetSubtypeV2(subtype)
+
+        if self.item_type == "movie":
+            if subtype == 0:
+                decoded_value: list[dict[str, Any]] = (
+                    self._asset_record["fields"]
+                    .get("adjustmentSimpleDataEnc", {})
+                    .get("value")
+                )
+                if decoded_value is not None:
+                    data = json.loads(
+                        zlib.decompress(
+                            base64.b64decode(decoded_value),
+                            -zlib.MAX_WBITS,
+                        )
+                    )
+                    for adjustment in data["adjustments"]:
+                        if adjustment.get("identifier") == "PortraitVideo":
+                            return AssetSubtypeV2.VIDEO_CINEMATIC
+                return AssetSubtypeV2.VIDEO_HDR
+            return AssetSubtypeV2(subtype)
+
+        return None
 
     @property
     def burst_id(self) -> str | None:

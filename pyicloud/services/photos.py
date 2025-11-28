@@ -1962,6 +1962,14 @@ class PhotoAsset:
         """Deletes the photo."""
         self._update_field("isDeleted", 1)
 
+    def hide(self) -> None:
+        """Deletes the photo."""
+        self._update_field("isHidden", 1)
+
+    def unhide(self) -> None:
+        """Deletes the photo."""
+        self._update_field("isHidden", 0)
+
     def _update_field(
         self,
         field: str,

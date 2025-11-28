@@ -1635,6 +1635,19 @@ class PhotoAsset:
         )
 
     @property
+    def keywords(self) -> set[str]:
+        """Gets the photo keywords."""
+        if "keywordsEnc" not in self._asset_record["fields"]:
+            return set()
+        return set(
+            plistlib.loads(
+                base64.b64decode(
+                    self._asset_record["fields"]["keywordsEnc"]["value"]
+                )
+            )
+        )
+
+    @property
     def location(self) -> Location | None:
         """Gets the photo location."""
         if "locationEnc" not in self._asset_record["fields"]:

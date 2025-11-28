@@ -1649,9 +1649,7 @@ class PhotoAsset:
 
         return datetime.fromtimestamp(
             self._asset_record["fields"]["assetDate"]["value"] / 1000.0,
-            tz=timezone(
-                timedelta(seconds=timezone_offset)
-            ),
+            tz=timezone(timedelta(seconds=timezone_offset)),
         )
 
     @property

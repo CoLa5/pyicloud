@@ -1503,9 +1503,9 @@ class AssetVersionSize(str, Enum):
 
 
 class LivePhotoVersionSize(str, Enum):
-    ORIGINAL = "original"
-    MEDIUM = "medium"
-    THUMB = "small"
+    ORIGINAL = "original_video"
+    MEDIUM = "medium_video"
+    THUMB = "small_video"
 
 
 VersionSize = AssetVersionSize | LivePhotoVersionSize

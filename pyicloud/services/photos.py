@@ -1790,6 +1790,10 @@ class PhotoAsset:
             )
         )
 
+    @keywords.setter
+    def keywords(self, keywords: set[str]) -> None:
+        self._update_field("keywords", list(keywords))
+
     @property
     def location(self) -> Location | None:
         """Gets the photo location."""
@@ -1928,6 +1932,19 @@ class PhotoAsset:
         """Removes the photo from favorites."""
         if self.is_favorite:
             self.is_favorite = False
+
+    def add_keyword(self, keyword: str) -> None:
+        """Adds a keyword to photo."""
+        keywords = self.keywords
+        keywords.add(keyword)
+        self.keywords = keywords
+
+    def remove_keyword(self, keyword: str) -> None:
+        """Removes a keyword from photo."""
+        keywords = self.keywords
+        if keyword in keywords:
+            keywords.remove(keyword)
+            self.keywords = keywords
 
     def download(self, version="original", **kwargs) -> Optional[bytes]:
         """Returns the photo file."""

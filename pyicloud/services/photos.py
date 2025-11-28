@@ -1551,15 +1551,17 @@ class PhotoAsset:
 
     @property
     def dimensions(self) -> Tuple[int, int]:
-        """Gets the photo dimensions."""
+        """Gets the photo dimensions (width x height)."""
         return (self.width, self.height)
 
     @property
     def height(self) -> int:
+        """Gets the photo height in pixels."""
         return self._master_record["fields"]["resOriginalHeight"]["value"]
 
     @property
     def width(self) -> int:
+        """Gets the photo width in pixels."""
         return self._master_record["fields"]["resOriginalWidth"]["value"]
 
     @property

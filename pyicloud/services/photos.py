@@ -1550,6 +1550,13 @@ class PhotoAsset:
         )
 
     @property
+    def burst_id(self) -> str | None:
+        """Gets the photo burst ID (if it contains bursts else None)."""
+        if "burstId" not in self._asset_record["fields"]:
+            return None
+        return self._asset_record["fields"]["burstId"]["value"]
+
+    @property
     def description(self) -> str | None:
         """Gets the photo description (caption)."""
         if "extendedDescEnc" not in self._asset_record["fields"]:
@@ -1567,6 +1574,11 @@ class PhotoAsset:
     def height(self) -> int:
         """Gets the photo height in pixels."""
         return self._master_record["fields"]["resOriginalHeight"]["value"]
+
+    @property
+    def is_burst_photo(self) -> bool:
+        """Checks if the photo is a burst photo."""
+        return self.burst_id is not None
 
     @property
     def width(self) -> int:

@@ -1805,12 +1805,19 @@ class PhotoAsset:
 
     @property
     def title(self) -> str | None:
-        """Gets the photo title."""
+        """Gets / sets the photo title."""
         if "captionEnc" not in self._asset_record["fields"]:
             return None
         return base64.b64decode(
             self._asset_record["fields"]["captionEnc"]["value"]
         ).decode("utf-8")
+
+    @title.setter
+    def title(self, title: str) -> None:
+        self._update_field(
+            "captionEnc",
+            base64.b64encode(title.encode("utf-8")).decode("utf-8"),
+        )
 
     @property
     def item_type(self) -> str:

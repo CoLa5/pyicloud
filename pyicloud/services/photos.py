@@ -1455,6 +1455,11 @@ class SharedPhotoStreamAlbum(BasePhotoAlbum):
         return None
 
 
+class AssetItemType(str, Enum):
+    MOVIE = "movie"
+    IMAGE = "image"
+
+
 class AssetSubtypeV2(IntEnum):
     """Asset Subtype V2."""
 
@@ -1489,6 +1494,23 @@ class AssetSubtypeV2(IntEnum):
         return self.name
 
 
+class AssetVersionSize(str, Enum):
+    ORIGINAL = "original"
+    ADJUSTED = "adjusted"
+    ALTERNATIVE = "alternative"
+    MEDIUM = "medium"
+    THUMB = "thumb"
+
+
+class LivePhotoVersionSize(str, Enum):
+    ORIGINAL = "original"
+    MEDIUM = "medium"
+    THUMB = "small"
+
+
+VersionSize = AssetVersionSize | LivePhotoVersionSize
+
+
 class Location(TypedDict, total=False):
     """Location."""
 
@@ -1506,6 +1528,8 @@ class Location(TypedDict, total=False):
 
 @unique
 class Orientation(IntEnum):
+    """Orientation."""
+
     NOT_SET = 0
     HORIZONTAL = 1
     MIRROR_HORIZONTAL = 2
@@ -1538,11 +1562,24 @@ class PhotoAsset:
 
         self._versions: Optional[dict[str, dict[str, Any]]] = None
 
-    ITEM_TYPES: dict[str, str] = {
-        "public.heic": "image",
-        "public.jpeg": "image",
-        "public.png": "image",
-        "com.apple.quicktime-movie": "movie",
+    ITEM_TYPES: dict[str, AssetItemType] = {
+        "public.heic": AssetItemType.IMAGE,
+        "public.heif": AssetItemType.IMAGE,
+        "public.jpeg": AssetItemType.IMAGE,
+        "public.png": AssetItemType.IMAGE,
+        "com.apple.quicktime-movie": AssetItemType.MOVIE,
+        "com.adobe.raw-image": AssetItemType.IMAGE,
+        "com.canon.cr2-raw-image": AssetItemType.IMAGE,
+        "com.canon.crw-raw-image": AssetItemType.IMAGE,
+        "com.sony.arw-raw-image": AssetItemType.IMAGE,
+        "com.fuji.raw-image": AssetItemType.IMAGE,
+        "com.panasonic.rw2-raw-image": AssetItemType.IMAGE,
+        "com.nikon.nrw-raw-image": AssetItemType.IMAGE,
+        "com.pentax.raw-image": AssetItemType.IMAGE,
+        "com.nikon.raw-image": AssetItemType.IMAGE,
+        "com.olympus.raw-image": AssetItemType.IMAGE,
+        "com.canon.cr3-raw-image": AssetItemType.IMAGE,
+        "com.olympus.or-raw-image": AssetItemType.IMAGE,
     }
 
     FILE_TYPE_EXTENSIONS: dict[str, str] = {
@@ -1552,21 +1589,21 @@ class PhotoAsset:
         "com.apple.quicktime-movie": ".MOV",
     }
 
-    PHOTO_VERSION_LOOKUP: dict[str, str] = {
-        "original": "resOriginal",
-        "alternative": "resOriginalAlt",
-        "medium": "resJPEGMed",
-        "thumb": "resJPEGThumb",
-        "adjusted": "resJPEGFull",
-        "original_video": "resOriginalVidCompl",
-        "medium_video": "resVidMed",
-        "thumb_video": "resVidSmall",
+    PHOTO_VERSION_LOOKUP: dict[VersionSize, str] = {
+        AssetVersionSize.ORIGINAL: "resOriginal",
+        AssetVersionSize.ALTERNATIVE: "resOriginalAlt",
+        AssetVersionSize.MEDIUM: "resJPEGMed",
+        AssetVersionSize.THUMB: "resJPEGThumb",
+        AssetVersionSize.ADJUSTED: "resJPEGFull",
+        LivePhotoVersionSize.ORIGINAL: "resOriginalVidCompl",
+        LivePhotoVersionSize.MEDIUM: "resVidMed",
+        LivePhotoVersionSize.THUMB: "resVidSmall",
     }
 
-    VIDEO_VERSION_LOOKUP: dict[str, str] = {
-        "original": "resOriginal",
-        "medium": "resVidMed",
-        "thumb": "resVidSmall",
+    VIDEO_VERSION_LOOKUP: dict[VersionSize, str] = {
+        AssetVersionSize.ORIGINAL: "resOriginal",
+        AssetVersionSize.MEDIUM: "resVidMed",
+        AssetVersionSize.THUMB: "resVidSmall",
     }
 
     def __repr__(self) -> str:
@@ -1623,7 +1660,7 @@ class PhotoAsset:
             return None
         subtype = self._asset_record["fields"]["assetSubtypeV2"]["value"]
 
-        if self.item_type == "image":
+        if self.item_type == AssetItemType.IMAGE:
             if subtype == 0:
                 decoded_value: list[dict[str, Any]] = (
                     self._asset_record["fields"]
@@ -1643,7 +1680,7 @@ class PhotoAsset:
                 return AssetSubtypeV2.PHOTO_HDR
             return AssetSubtypeV2(subtype)
 
-        if self.item_type == "movie":
+        if self.item_type == AssetItemType.MOVIE:
             if subtype == 0:
                 decoded_value: list[dict[str, Any]] = (
                     self._asset_record["fields"]
@@ -1753,29 +1790,25 @@ class PhotoAsset:
     def is_live_photo(self) -> bool:
         """Checks if the photo is a live photo."""
         return (
-            self.item_type == "image"
+            self.item_type == AssetItemType.IMAGE
             and "resOriginalVidComplFileType" in self._master_record["fields"]
         )
 
     @property
-    def item_type(self) -> str:
+    def item_type(self) -> AssetItemType | None:
         """Gets the photo item type."""
-        item_type: str = ""
-        try:
-            item_type = self._master_record["fields"]["itemType"]["value"]
-        except KeyError:
-            try:
-                item_type = self._master_record["fields"]["resOriginalFileType"][
-                    "value"
-                ]
-            except KeyError:
-                # Both fields missing; fall back to filename extension or default to "movie".
-                pass
-        if item_type in self.ITEM_TYPES:
-            return self.ITEM_TYPES[item_type]
+        value = self._master_record["fields"].get("itemType", {}).get("value")
+        if value is None:
+            value = (
+                self._master_record["fields"]
+                .get("resOriginalFileType", {})
+                .get("value")
+            )
+        if value in self.ITEM_TYPES:
+            return self.ITEM_TYPES[value]
         if self.filename.lower().endswith((".heic", ".png", ".jpg", ".jpeg")):
-            return "image"
-        return "movie"
+            return AssetItemType.IMAGE
+        return AssetItemType.MOVIE
 
     @property
     def keywords(self) -> set[str]:
@@ -1866,7 +1899,7 @@ class PhotoAsset:
             self._versions = {}
             typed_version_lookup: dict[str, str] = (
                 self.VIDEO_VERSION_LOOKUP
-                if self.item_type == "movie"
+                if self.item_type == AssetItemType.MOVIE
                 else self.PHOTO_VERSION_LOOKUP
             )
             for key, prefix in typed_version_lookup.items():
@@ -1903,7 +1936,7 @@ class PhotoAsset:
             version_type = version.get("type")
             if (
                 version_type is not None
-                and self.ITEM_TYPES.get(version_type) == "movie"
+                and self.ITEM_TYPES.get(version_type) == AssetItemType.MOVIE
             ):
                 # Create the video filename from the image filename.
                 # e.g. IMG_1234.HEIC -> IMG_1234.MOV

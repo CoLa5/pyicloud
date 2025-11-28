@@ -1679,6 +1679,17 @@ class PhotoAsset:
         )
 
     @property
+    def metadata(self) -> dict[str, Any]:
+        """Gets the photo metadata like exif etc."""
+        if "mediaMetaDataEnc" not in self._master_record["fields"]:
+            return {}
+        return plistlib.loads(
+            base64.b64decode(
+                self._master_record["fields"]["mediaMetaDataEnc"]["value"]
+            ),
+        )
+
+    @property
     def width(self) -> int:
         """Gets the photo width in pixels."""
         return self._master_record["fields"]["resOriginalWidth"]["value"]

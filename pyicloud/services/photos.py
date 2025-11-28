@@ -1550,6 +1550,15 @@ class PhotoAsset:
         )
 
     @property
+    def description(self) -> str | None:
+        """Gets the photo description (caption)."""
+        if "extendedDescEnc" not in self._asset_record["fields"]:
+            return None
+        return base64.b64decode(
+            self._asset_record["fields"]["extendedDescEnc"]["value"]
+        ).decode("utf-8")
+
+    @property
     def dimensions(self) -> Tuple[int, int]:
         """Gets the photo dimensions (width x height)."""
         return (self.width, self.height)

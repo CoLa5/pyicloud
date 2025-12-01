@@ -1828,12 +1828,11 @@ class PhotoAsset:
         if "locationEnc" not in self._asset_record["fields"]:
             return None
         loc = plistlib.loads(
-            base64.b64decode(
-                self._asset_record["fields"]["locationEnc"]["value"]
-            )
+            base64.b64decode(self._asset_record["fields"]["locationEnc"]["value"]),
+            dict_type=Location,
+            fmt=plistlib.FMT_BINARY,
         )
-        if not loc:
-            return None
+        return loc if loc else None
         return Location(**loc)
 
     @property

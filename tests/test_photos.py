@@ -29,6 +29,7 @@ from pyicloud.services.photos import (
     PhotoStreamLibrary,
     SharedPhotoStreamAlbum,
     SmartAlbumEnum,
+    parse_asset_response,
 )
 
 
@@ -554,7 +555,7 @@ def test_base_photo_album_parse_response() -> None:
             },
         ]
     }
-    asset_records, master_records = library.parse_asset_response(response)
+    asset_records, master_records = parse_asset_response(response)
     assert "master1" in asset_records
     assert len(master_records) == 1
     assert master_records[0]["recordName"] == "master1"

@@ -1489,13 +1489,15 @@ def test_photo_asset_properties_and_methods() -> None:
 
     # Prepare mock data for master and asset records
     filename = "test_photo.JPG"
-    encoded_filename: str = base64.b64encode(filename.encode("utf-8")).decode("utf-8")
+    enc_filename: str = base64.b64encode(filename.encode("utf-8")).decode("utf-8")
     now = int(datetime.now(tz=timezone.utc).timestamp() * 1000)
     tz_offset = 5 * 3600  # +5:00
+    title = "Test Title"
+    enc_title: str = base64.b64encode(title.encode("utf-8")).decode("utf-8")
     master_record: dict[str, Any] = {
         "recordName": "photo_id_123",
         "fields": {
-            "filenameEnc": {"value": encoded_filename},
+            "filenameEnc": {"value": enc_filename},
             "resOriginalRes": {
                 "value": {
                     "size": 123456,
@@ -1522,6 +1524,7 @@ def test_photo_asset_properties_and_methods() -> None:
         "fields": {
             "assetDate": {"value": now},
             "addedDate": {"value": now},
+            "captionEnc": {"value": enc_title},
             "timeZoneOffset": {"value": tz_offset},
         },
         "recordName": "photo_id_123",
@@ -1570,6 +1573,8 @@ def test_photo_asset_properties_and_methods() -> None:
     assert asset.item_type == "image"
     # Test is_live_photo (should be False)
     assert asset.is_live_photo is False
+    # Test title, description, keywords
+    assert asset.title == title
     # Test versions
     versions: dict[str, dict[str, Any]] = asset.versions
     assert "original" in versions

@@ -1995,9 +1995,10 @@ class PhotoAsset:
         )
         return response.raw.read()
 
-    def delete(self) -> None:
+    def delete(self) -> bool:
         """Deletes the photo."""
         self._update_field("isDeleted", 1)
+        return True
 
     def hide(self) -> None:
         """Deletes the photo."""

@@ -1526,6 +1526,17 @@ def test_photo_asset_properties_and_methods() -> None:
         "recordType": "CPLAsset",
         "zoneID": {"zoneName": "PrimarySync"},
     }
+    update_response: dict[str, Any] = {
+        "records": [
+            {
+                "recordType": "CPLAsset",
+                "fields": {
+                    "isDeleted": {"value": 1},
+                    "masterRef": {"value": {"recordName": "photo_id_123"}},
+                },
+            }
+        ]
+    }
 
     mock_service = MagicMock()
     mock_service.service_endpoint = "https://example.com"
@@ -1535,7 +1546,7 @@ def test_photo_asset_properties_and_methods() -> None:
         raw=MagicMock(read=MagicMock(return_value=b"response")),
     )
     mock_service.session.post.return_value = MagicMock(
-        json=MagicMock(return_value={}), status_code=200
+        json=MagicMock(return_value=update_response), status_code=200
     )
 
     asset = PhotoAsset(mock_service, master_record, asset_record)

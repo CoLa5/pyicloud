@@ -1611,6 +1611,8 @@ def test_photo_asset_properties_and_methods() -> None:
     assert asset.is_favorite is True
     # Test is_live_photo (should be False)
     assert asset.is_live_photo is False
+    assert asset.duration is None
+    assert asset.live_photo_time is None
     # Test title, description, keywords
     assert asset.title == title
     assert asset.description == desc
@@ -1669,6 +1671,10 @@ def test_photo_asset_is_live_photo_true() -> None:
         "fields": {
             "assetDate": {"value": 1700000000000},
             "addedDate": {"value": 1700000000000},
+            "vidComplDispScale": {"value": 60},
+            "vidComplDispValue": {"value": 90},
+            "vidComplDurScale": {"value": 1000},
+            "vidComplDurValue": {"value": 2500},
         },
         "recordName": "photo_id_456",
         "recordType": "CPLAsset",
@@ -1677,6 +1683,8 @@ def test_photo_asset_is_live_photo_true() -> None:
     mock_service = MagicMock()
     asset = PhotoAsset(mock_service, master_record, asset_record)
     assert asset.is_live_photo is True
+    assert asset.duration == 2.5
+    assert asset.live_photo_time == 1.5
     # The thumb_video version filename should end with .MOV
     thumb_video = asset.versions.get("thumb_video")
     if thumb_video:

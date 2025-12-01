@@ -1812,7 +1812,15 @@ class PhotoAsset:
 
     @keywords.setter
     def keywords(self, keywords: set[str]) -> None:
-        self._update_field("keywords", list(keywords))
+        self._update_field(
+            "keywordsEnc",
+            base64.b64encode(
+                plistlib.dumps(
+                    list(keywords),
+                    fmt=plistlib.FMT_BINARY,
+                )
+            ).decode("utf-8"),
+        )
 
     @property
     def location(self) -> Location | None:

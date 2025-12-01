@@ -3,6 +3,7 @@
 # pylint: disable=protected-access
 import base64
 from datetime import datetime, timezone
+import plistlib
 from typing import Any
 from unittest.mock import MagicMock, mock_open, patch
 
@@ -17,6 +18,7 @@ from pyicloud.services.photos import (
     PRIMARY_ZONE,
     AlbumContainer,
     AlbumTypeEnum,
+    AssetSubtypeV2,
     BasePhotoAlbum,
     BasePhotoLibrary,
     DirectionEnum,
@@ -1530,6 +1532,7 @@ def test_photo_asset_properties_and_methods() -> None:
         "fields": {
             "addedDate": {"value": now},
             "assetDate": {"value": now},
+            "assetSubtypeV2": {"value": 1},
             "captionEnc": {"value": enc_title},
             "extendedDescEnc": {"value": enc_desc},
             "isFavorite": {"value": 1},
@@ -1583,8 +1586,9 @@ def test_photo_asset_properties_and_methods() -> None:
     assert isinstance(asset.timezone, timezone)
     # Test dimensions
     assert asset.dimensions == (1920, 1080)
-    # Test item_type
+    # Test item_type and asset subtype
     assert asset.item_type == "image"
+    assert asset.asset_subtype_v2 == AssetSubtypeV2.PHOTO_PANORAMA
     # Test is_favorite
     assert asset.is_favorite is True
     # Test is_live_photo (should be False)

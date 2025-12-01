@@ -1494,6 +1494,8 @@ def test_photo_asset_properties_and_methods() -> None:
     tz_offset = 5 * 3600  # +5:00
     title = "Test Title"
     enc_title: str = base64.b64encode(title.encode("utf-8")).decode("utf-8")
+    desc = "Test description."
+    enc_desc: str = base64.b64encode(desc.encode("utf-8")).decode("utf-8")
     master_record: dict[str, Any] = {
         "recordName": "photo_id_123",
         "fields": {
@@ -1525,6 +1527,7 @@ def test_photo_asset_properties_and_methods() -> None:
             "assetDate": {"value": now},
             "addedDate": {"value": now},
             "captionEnc": {"value": enc_title},
+            "extendedDescEnc": {"value": enc_desc},
             "timeZoneOffset": {"value": tz_offset},
         },
         "recordName": "photo_id_123",
@@ -1575,6 +1578,7 @@ def test_photo_asset_properties_and_methods() -> None:
     assert asset.is_live_photo is False
     # Test title, description, keywords
     assert asset.title == title
+    assert asset.description == desc
     # Test versions
     versions: dict[str, dict[str, Any]] = asset.versions
     assert "original" in versions

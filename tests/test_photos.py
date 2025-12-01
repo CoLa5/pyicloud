@@ -1530,6 +1530,7 @@ def test_photo_asset_properties_and_methods() -> None:
         "fields": {
             "assetDate": {"value": now},
             "addedDate": {"value": now},
+            "assetDate": {"value": now},
             "captionEnc": {"value": enc_title},
             "extendedDescEnc": {"value": enc_desc},
             "keywordsEnc": {"value": enc_keywords},
@@ -1573,8 +1574,13 @@ def test_photo_asset_properties_and_methods() -> None:
     # Test created and asset_date
     assert isinstance(asset.created, datetime)
     assert isinstance(asset.asset_date, datetime)
+    assert asset.created.tzinfo is not None
+    assert asset.asset_date.tzinfo is not None
     # Test added_date
     assert isinstance(asset.added_date, datetime)
+    assert asset.added_date.tzinfo is not None
+    # Test timezone
+    assert isinstance(asset.timezone, timezone)
     # Test dimensions
     assert asset.dimensions == (1920, 1080)
     # Test item_type

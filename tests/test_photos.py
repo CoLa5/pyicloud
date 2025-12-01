@@ -23,6 +23,7 @@ from pyicloud.services.photos import (
     BasePhotoLibrary,
     DirectionEnum,
     ListTypeEnum,
+    Location,
     ObjectTypeEnum,
     PhotoAlbum,
     PhotoAsset,
@@ -1502,6 +1503,22 @@ def test_photo_asset_properties_and_methods() -> None:
     enc_keywords: str = base64.b64encode(
         plistlib.dumps(list(keywords), fmt=plistlib.FMT_BINARY)
     ).decode("utf-8")
+    location = Location(
+        alt=1234.5,
+        course=45.6,
+        courseAcc=0.1,
+        horzAcc=95.6,
+        lat=12.34567,
+        lon=128.65,
+        speed=10.5,
+        speedAcc=1.2,
+        timestamp=datetime.now(),
+        vertAcc=45.6,
+    )
+    enc_location: str = base64.b64encode(
+        plistlib.dumps(location, fmt=plistlib.FMT_BINARY)
+    ).decode("utf-8")
+
     master_record: dict[str, Any] = {
         "recordName": "photo_id_123",
         "fields": {
@@ -1537,6 +1554,7 @@ def test_photo_asset_properties_and_methods() -> None:
             "extendedDescEnc": {"value": enc_desc},
             "isFavorite": {"value": 1},
             "keywordsEnc": {"value": enc_keywords},
+            "locationEnc": {"value": enc_location},
             "timeZoneOffset": {"value": tz_offset},
         },
         "recordName": "photo_id_123",
@@ -1597,6 +1615,9 @@ def test_photo_asset_properties_and_methods() -> None:
     assert asset.title == title
     assert asset.description == desc
     assert asset.keywords == keywords
+    # Test location
+    assert isinstance(asset.location, dict)
+    assert asset.location == location
     # Test versions
     versions: dict[str, dict[str, Any]] = asset.versions
     assert "original" in versions

@@ -1491,6 +1491,7 @@ def test_photo_asset_properties_and_methods() -> None:
     filename = "test_photo.JPG"
     encoded_filename: str = base64.b64encode(filename.encode("utf-8")).decode("utf-8")
     now = int(datetime.now(tz=timezone.utc).timestamp() * 1000)
+    tz_offset = 5 * 3600  # +5:00
     master_record: dict[str, Any] = {
         "recordName": "photo_id_123",
         "fields": {
@@ -1521,6 +1522,7 @@ def test_photo_asset_properties_and_methods() -> None:
         "fields": {
             "assetDate": {"value": now},
             "addedDate": {"value": now},
+            "timeZoneOffset": {"value": tz_offset},
         },
         "recordName": "photo_id_123",
         "recordType": "CPLAsset",

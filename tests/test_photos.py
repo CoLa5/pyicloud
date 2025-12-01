@@ -1528,11 +1528,11 @@ def test_photo_asset_properties_and_methods() -> None:
     }
     asset_record: dict[str, Any] = {
         "fields": {
-            "assetDate": {"value": now},
             "addedDate": {"value": now},
             "assetDate": {"value": now},
             "captionEnc": {"value": enc_title},
             "extendedDescEnc": {"value": enc_desc},
+            "isFavorite": {"value": 1},
             "keywordsEnc": {"value": enc_keywords},
             "timeZoneOffset": {"value": tz_offset},
         },
@@ -1585,6 +1585,8 @@ def test_photo_asset_properties_and_methods() -> None:
     assert asset.dimensions == (1920, 1080)
     # Test item_type
     assert asset.item_type == "image"
+    # Test is_favorite
+    assert asset.is_favorite is True
     # Test is_live_photo (should be False)
     assert asset.is_live_photo is False
     # Test title, description, keywords

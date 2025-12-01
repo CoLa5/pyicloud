@@ -198,7 +198,7 @@ class BasePhotoLibrary:
 
 
 def parse_asset_response(
-    response: dict[str, list[dict[str, Any]]]
+    response: dict[str, list[dict[str, Any]]],
 ) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
     """Parses the asset response."""
     asset_records: dict[str, dict[str, Any]] = {}
@@ -1620,7 +1620,6 @@ class PhotoAsset:
         """Gets the photo size."""
         return self._master_record["fields"]["resOriginalRes"]["value"]["size"]
 
-
     @property
     def added_date(self) -> datetime | None:
         """Gets the photo added date."""
@@ -1804,9 +1803,8 @@ class PhotoAsset:
             return set()
         return set(
             plistlib.loads(
-                base64.b64decode(
-                    self._asset_record["fields"]["keywordsEnc"]["value"]
-                )
+                base64.b64decode(self._asset_record["fields"]["keywordsEnc"]["value"]),
+                fmt=plistlib.FMT_BINARY,
             )
         )
 
@@ -1833,7 +1831,6 @@ class PhotoAsset:
             fmt=plistlib.FMT_BINARY,
         )
         return loc if loc else None
-        return Location(**loc)
 
     @property
     def live_photo_time(self) -> float | None:
@@ -1861,6 +1858,7 @@ class PhotoAsset:
             base64.b64decode(
                 self._master_record["fields"]["mediaMetaDataEnc"]["value"]
             ),
+            fmt=plistlib.FMT_BINARY,
         )
 
     @property
@@ -1874,9 +1872,7 @@ class PhotoAsset:
     def timezone(self) -> timezone:
         """Gets the photo timezone."""
         if "timeZoneOffset" in self._asset_record["fields"]:
-            timezone_offset = self._asset_record["fields"]["timeZoneOffset"][
-                "value"
-            ]
+            timezone_offset = self._asset_record["fields"]["timeZoneOffset"]["value"]
             return timezone(timedelta(seconds=timezone_offset))
         return timezone.utc
 
@@ -1914,9 +1910,7 @@ class PhotoAsset:
                 else:
                     fields = None
                 if fields is not None:
-                    self._versions[key] = self._get_photo_version(
-                        fields, prefix
-                    )
+                    self._versions[key] = self._get_photo_version(fields, prefix)
 
         return self._versions
 
@@ -1945,12 +1939,8 @@ class PhotoAsset:
                 # Create the video filename from the image filename.
                 # e.g. IMG_1234.HEIC -> IMG_1234.MOV
                 filename_base, _ = os.path.splitext(self.filename)
-                extension: str = self.FILE_TYPE_EXTENSIONS.get(
-                    version_type, ".MOV"
-                )
-                live_photo_video_filename: str = (
-                    f"{filename_base:s}{extension:s}"
-                )
+                extension: str = self.FILE_TYPE_EXTENSIONS.get(version_type, ".MOV")
+                live_photo_video_filename: str = f"{filename_base:s}{extension:s}"
                 version["filename"] = live_photo_video_filename
 
         return version
@@ -2041,9 +2031,7 @@ class PhotoAsset:
         )
 
         if not resp.ok:
-            api_error = PyiCloudAPIResponseException(
-                resp.reason, resp.status_code
-            )
+            api_error = PyiCloudAPIResponseException(resp.reason, resp.status_code)
             _LOGGER.error(api_error)
             raise api_error
 
@@ -2060,9 +2048,7 @@ class PhotoAsset:
         if asset_record:
             self._asset_record["fields"][field] = asset_record["fields"][field]
         else:
-            _LOGGER.debug(
-                "No asset record found for master record: %s", record_name
-            )
+            _LOGGER.debug("No asset record found for master record: %s", record_name)
 
 
 class PhotoStreamAsset(PhotoAsset):

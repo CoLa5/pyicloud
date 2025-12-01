@@ -2,8 +2,8 @@
 
 # pylint: disable=protected-access
 import base64
-from datetime import datetime, timezone
 import plistlib
+from datetime import datetime, timezone
 from typing import Any
 from unittest.mock import MagicMock, mock_open, patch
 

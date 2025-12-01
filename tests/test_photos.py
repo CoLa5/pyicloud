@@ -1496,6 +1496,10 @@ def test_photo_asset_properties_and_methods() -> None:
     enc_title: str = base64.b64encode(title.encode("utf-8")).decode("utf-8")
     desc = "Test description."
     enc_desc: str = base64.b64encode(desc.encode("utf-8")).decode("utf-8")
+    keywords = {"tag-1", "tag-2", "tag-3"}
+    enc_keywords: str = base64.b64encode(
+        plistlib.dumps(list(keywords), fmt=plistlib.FMT_BINARY)
+    ).decode("utf-8")
     master_record: dict[str, Any] = {
         "recordName": "photo_id_123",
         "fields": {
@@ -1528,6 +1532,7 @@ def test_photo_asset_properties_and_methods() -> None:
             "addedDate": {"value": now},
             "captionEnc": {"value": enc_title},
             "extendedDescEnc": {"value": enc_desc},
+            "keywordsEnc": {"value": enc_keywords},
             "timeZoneOffset": {"value": tz_offset},
         },
         "recordName": "photo_id_123",
@@ -1579,6 +1584,7 @@ def test_photo_asset_properties_and_methods() -> None:
     # Test title, description, keywords
     assert asset.title == title
     assert asset.description == desc
+    assert asset.keywords == keywords
     # Test versions
     versions: dict[str, dict[str, Any]] = asset.versions
     assert "original" in versions
